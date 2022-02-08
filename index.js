@@ -127,7 +127,25 @@ const replaceFromSuggestedText = (selected1, text, isLoading, event, data) => {
 
 }
 
+const iconModel = async (F1selected, text, event, data) => {
+    let isLoading = false
+    replaceFromSuggestedText(F1selected, text, isLoading, event, data)
+    console.log("Hello, newton")
+    let api_url = "https://be0c-1-22-107-104.ngrok.io/paraphraser/"
+    let res = await fetch(api_url, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: `${selectedArr.text.substring(0, selectedArr.text.indexOf("."))}.` })
+    })
+    let orRes = await res.json()
+    data = orRes['paraphrases']
 
+    console.log("data", orRes, data)
+    isLoading = true
+    replaceFromSuggestedText(F1selected, text, isLoading, event, data)
+}
 
 let data = ["It Will Fetched Text 1", "It Will Fetched Text 2", "It Will Fetched Text 3", "It Will Fetched Text 4", "It Will Fetched Text 5"]
 const selectedArr = { node: '', text: '', }
@@ -135,34 +153,47 @@ const selectedArr = { node: '', text: '', }
 const handleCLick = async (event) => {
     if (window.getSelection().toString().length > 0) {
         const text = window.getSelection().toString().trim()
+
         // console.log("1", event.target.nodeName, event, window.getSelection(), ` vaue: ${event.target.value}, ${text}`)
+        // window.getSelection().anchorNode.getRootNode()
+        // console.log(document.getSelection().anchorNode.parentElement.parentElement.id, "id")
+
         selectedArr.node = window.getSelection().getRangeAt(0)
-        window.getSelection().anchorNode.getRootNode()
-        console.log(document.getSelection().anchorNode.parentElement.parentElement.id, "id")
+
         if (text !== selectedArr.text && document.activeElement.isContentEditable === true) {
             // console.log("3");
             selectedArr.text = text
             const F1selected = window.getSelection()
-            console.log("window.getSelection().anchorNode.parentElement.isContentEditable", document.activeElement.isContentEditable, window.getSelection().anchorNode.parentElement.isContentEditable)
+
+
+            // console.log("window.getSelection().anchorNode.parentElement.isContentEditable", document.activeElement.isContentEditable, window.getSelection().anchorNode.parentElement.isContentEditable)
             // selectedArr.push(F1selected.anchorNode.parentElement)
             // console.log('hello', selectedArr, F1selected.anchorNode.parentElement)
-            let isLoading = false
-            replaceFromSuggestedText(F1selected, text, isLoading, event, data)
-            console.log("Hello, newton")
-            let api_url = "https://be0c-1-22-107-104.ngrok.io/paraphraser/"
-            let res = await fetch(api_url, {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ text: selectedArr.text })
-            })
-            let orRes = await res.json()
-            data = orRes['paraphrases']
 
-            console.log("data", orRes, data)
-            isLoading = true
-            replaceFromSuggestedText(F1selected, text, isLoading, event, data)
+            const buttonIcon = document.createElement('button')
+
+            buttonIcon.textContent = "P"
+            buttonIcon.style.background = "#3b3c3a";
+            buttonIcon.id = "iconId"
+            buttonIcon.style.top = `${event.pageY - 50}px`
+            buttonIcon.style.left = `${event.pageX - 15}px`
+            buttonIcon.style.position = "absolute";
+            buttonIcon.style.zIndex = 99999;
+            buttonIcon.style.cursor = "pointer";
+            buttonIcon.style.fontFamily = "cursive";
+            buttonIcon.style.borderRadius = "50%";
+            buttonIcon.style.fontWeight = "bold";
+            buttonIcon.style.border = "none";
+            buttonIcon.style.color = "#fffefc";
+            buttonIcon.style.width = "35px";
+            buttonIcon.style.height = "35px";
+            buttonIcon.onclick = () => {
+                iconModel(F1selected, text, event, data)
+                buttonIcon.remove()
+            }
+
+            document.querySelector('body').appendChild(buttonIcon)
+
 
         }
     }
@@ -173,9 +204,13 @@ document.addEventListener('mouseup', handleCLick);
 
 const handleMouseDown = (event) => {
     // console.log("2", event.target.id, event)
+    let eleButton = document.getElementById('iconId')
     let eleContainer = document.getElementById('maincontainer');
     if (event.target.id !== "pcontainer" && eleContainer !== null && event.target.className !== "pcontainer") {
         eleContainer.remove()
+    }
+    if (event.target.id !== "iconId" && eleButton !== null) {
+        eleButton.remove()
     }
 }
 
