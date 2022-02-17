@@ -1,4 +1,41 @@
+const textContentObj = {
+    search: "", replace: ""
+}
+
+function replaceText(element, text, replaceTextWith) {
+    if (textContentObj.search.length < 1 && textContentObj.replace.length < 1) {
+        textContentObj.search = text
+        textContentObj.replace = replaceTextWith;
+    }
+    else if (text.length > 1 && replaceTextWith.length > 1) {
+        textContentObj.search = text
+        textContentObj.replace = replaceTextWith;
+    }
+    console.log("replaceText1", element, "search:", text, "replaceTextWith: ", replaceTextWith, element.textContent, "textContentObj", textContentObj)
+    if (element.hasChildNodes()) {
+        console.log("Has Child")
+        element.childNodes.forEach(replaceText)
+    }
+    if (element.nodeType === Text.TEXT_NODE) {
+        let count = 0;
+        console.log('replaceText2', "text", text, "replaceTextWith", replaceTextWith, "element.textContent", element.textContent, "textContentObj", textContentObj)
+
+        if (element.textContent.match(textContentObj.search)) {
+
+            console.log("replaceText3", element, "text", text, "replaceTextWith", replaceTextWith, "textContentObj", textContentObj)
+            count++
+            if (count === 1) {
+                console.log("1 < 2")
+                let string = element.textContent.replace(textContentObj.search, textContentObj.replace)
+                element.replaceWith(string)
+            }
+        }
+    }
+}
+
+
 const replaceFromSuggestedText = (selected1, text, isLoading, event, data) => {
+    console.log("replaceFromSuggestedText", text)
     if (isLoading) {
         document.getElementById("pcontainer").remove()
         document.getElementById("maincontainer").remove()
@@ -93,8 +130,10 @@ const replaceFromSuggestedText = (selected1, text, isLoading, event, data) => {
                 else {
                     // console.log("selected", selected.target.value, selected)
                     let range = selectedArr.node
-                    range.deleteContents();
-                    range.insertNode(document.createTextNode(`${ele}`));
+                    // range.deleteContents();
+                    // range.insertNode(document.createTextNode(`${ele}`));
+                    replaceText(selected1, text, ele)
+
                     pContainer.remove()
                     mainEle.remove()
                     // event.target.value = `${ele}`
@@ -127,24 +166,51 @@ const replaceFromSuggestedText = (selected1, text, isLoading, event, data) => {
 
 }
 
+const getOrignalText = (text) => {
+    let selText1 = `${selectedArr.text.substring(0, selectedArr.text.indexOf("."))}.`
+    let selText2 = `${selectedArr.text.substring(0, selectedArr.text.indexOf("?"))}?`
+    console.log("selText1: ", selText1, "selText2: ", selText2, "text: ", text, "selText1.length", selText1.length, "selText2.length", selText2.length)
+    if (selText1.length > selText2.length) {
+        if (selText2 !== '?') {
+            return selText2
+        }
+        else {
+            return selText1
+        }
+    }
+    else if (selText1 === '.' && selText2 === '?') {
+        return text
+    }
+    else {
+        if (selText1 !== '.') {
+            return selText1
+        }
+        else {
+            return selText2
+        }
+    }
+}
+
 const iconModel = async (F1selected, text, event, data) => {
     let isLoading = false
-    replaceFromSuggestedText(F1selected, text, isLoading, event, data)
-    console.log("Hello, newton")
-    let api_url = "https://be0c-1-22-107-104.ngrok.io/paraphraser/"
+    let selText = getOrignalText(text)
+    console.log("Hello, newton", "selText", selText)
+    replaceFromSuggestedText(F1selected, selText, isLoading, event, data)
+
+    let api_url = "https://b394-1-23-236-238.ngrok.io/paraphraser/"
     let res = await fetch(api_url, {
         method: "POST",
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ text: `${selectedArr.text.substring(0, selectedArr.text.indexOf("."))}.` })
+        body: JSON.stringify({ text: selText })
     })
     let orRes = await res.json()
     data = orRes['paraphrases']
 
     console.log("data", orRes, data)
     isLoading = true
-    replaceFromSuggestedText(F1selected, text, isLoading, event, data)
+    replaceFromSuggestedText(F1selected, selText, isLoading, event, data)
 }
 
 let data = ["It Will Fetched Text 1", "It Will Fetched Text 2", "It Will Fetched Text 3", "It Will Fetched Text 4", "It Will Fetched Text 5"]
@@ -164,7 +230,7 @@ const handleCLick = async (event) => {
             // console.log("3");
             selectedArr.text = text
             const F1selected = window.getSelection()
-
+            let nodeText = F1selected.anchorNode.parentElement
 
             // console.log("window.getSelection().anchorNode.parentElement.isContentEditable", document.activeElement.isContentEditable, window.getSelection().anchorNode.parentElement.isContentEditable)
             // selectedArr.push(F1selected.anchorNode.parentElement)
@@ -188,7 +254,7 @@ const handleCLick = async (event) => {
             buttonIcon.style.width = "35px";
             buttonIcon.style.height = "35px";
             buttonIcon.onclick = () => {
-                iconModel(F1selected, text, event, data)
+                iconModel(nodeText, text, event, data)
                 buttonIcon.remove()
             }
 
