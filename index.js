@@ -2,6 +2,37 @@ const textContentObj = {
     search: "", replace: ""
 }
 
+function backgroundReplaceText(element, text) {
+    console.log("Hello Newton! backgroundReplaceText", element, text)
+    if (textContentObj.search.length < 1) {
+        textContentObj.search = text
+    }
+    else if (text.length > 1) {
+        textContentObj.search = text
+    }
+    if (element.hasChildNodes()) {
+        console.log("Has Child")
+        element.childNodes.forEach(backgroundReplaceText)
+    }
+    else if (element.nodeType === Text.TEXT_NODE) {
+        let count = 0;
+        if (element.textContent.match(textContentObj.search)) {
+            console.log("Text.TEXT_NODE)", Text.TEXT_NODE, "textContentObj.search", textContentObj.search)
+            count++
+            if (count === 1) {
+
+                let newElement = document.createElement('span')
+                newElement.style.backgroundColor = "#97e3e3"
+                newElement.innerHTML = textContentObj.search;
+                let divContainer = document.createElement('span')
+                divContainer.innerHTML = element.textContent.replace(textContentObj.search, `<span class="selectedTextBG">${textContentObj.search}</span>`)
+                console.log("1 < 2", count, "Newton", "count", newElement, "textContentObj.search", textContentObj.search)
+                element.replaceWith(divContainer)
+            }
+        }
+    }
+}
+
 function replaceText(element, text, replaceTextWith) {
     if (textContentObj.search.length < 1 && textContentObj.replace.length < 1) {
         textContentObj.search = text
@@ -25,16 +56,82 @@ function replaceText(element, text, replaceTextWith) {
             console.log("replaceText3", element, "text", text, "replaceTextWith", replaceTextWith, "textContentObj", textContentObj)
             count++
             if (count === 1) {
-                console.log("1 < 2")
+                // let newElement = document.createElement('div')
+
                 let string = element.textContent.replace(textContentObj.search, textContentObj.replace)
+                console.log("1 < 2", "string", string,)
                 element.replaceWith(string)
+                let cols = document.getElementsByClassName('selectedTextBG');
+                for (i = 0; i < cols.length; i++) {
+                    console.log("cols, cols[i]", cols, cols[i])
+                    cols[i].style.backgroundColor = 'white';
+                }
             }
         }
     }
 }
 
+// {/* <div>
+//   <button onclick="incrementSentence()"><</button>
+//   1/<span style="color:rgba(139, 10, 190, 0.5);"> 2 Sentences</span>
+//   <button style="color:rgb(139, 10, 190);" onclick="decrementSentence()">></button>
+// </div> */}
 
-const replaceFromSuggestedText = (selected1, text, isLoading, event, data) => {
+const decrementSentence = () => {
+    console.log("decrement")
+}
+
+const incrementSentence = () => {
+    console.log('increment');
+}
+
+// let buttonHTML = `<div class='sentence-navigator' id='sentence-navigator'>
+// <button onclick="decrementSentence()" class='navigator-button' id='b'><</button>
+// ${count}/<span style="color:rgba(139, 10, 190, 0.5);"> ${sentanceArrayLength} Sentences</span>
+// <button style="color:rgb(139, 10, 190);" onclick="incrementSentence()" class='navigator-button' id='a'>></button>
+// </div>`
+
+const getSentanceButton = (selected1, text, isLoading, event, data, sentances, counter) => {
+
+    let HTMLBtn = document.createElement('div')
+    HTMLBtn.className = 'sentence-navigator'
+    HTMLBtn.id = 'sentence-navigator'
+
+    let btnText = document.createElement('span')
+    btnText.className = 'btnSentenceText'
+    btnText.textContent = `${sentances.length} Sentences`
+
+    let btnTextCount = document.createElement('span')
+    btnTextCount.textContent = `${counter}/`
+
+    let btnIncrement = document.createElement('button')
+    btnIncrement.className = 'navigator-button'
+    btnIncrement.textContent = '>'
+    btnIncrement.onclick = () => {
+        if (sentances.length > counter) {
+            let selSentance = sentances[counter]
+            iconModel(selected1, sentances, event, selSentance, counter++)
+        }
+    }
+
+    let btnDecrement = document.createElement('button')
+    btnDecrement.className = 'navigator-button'
+    btnDecrement.textContent = '<'
+    btnDecrement.onclick = () => {
+        if (sentances.length > counter && counter > 1) {
+            let selSentance = sentances[counter - 2]
+            iconModel(selected1, sentances, event, selSentance, counter--)
+        }
+    }
+
+    HTMLBtn.appendChild(btnDecrement)
+    HTMLBtn.appendChild(btnTextCount)
+    HTMLBtn.appendChild(btnText)
+    HTMLBtn.appendChild(btnIncrement)
+    return HTMLBtn
+}
+
+const replaceFromSuggestedText = (selected1, text, isLoading, event, data, sentances, counter) => {
     console.log("replaceFromSuggestedText", text)
     if (isLoading) {
         document.getElementById("pcontainer").remove()
@@ -90,6 +187,7 @@ const replaceFromSuggestedText = (selected1, text, isLoading, event, data) => {
     // pContainer.appendChild(h2)
 
     if (!isLoading) {
+        backgroundReplaceText(selected1, text)
         let loadingEle = document.createElement('div');
         loadingEle.id = "loadingEle"
         loadingEle.textContent = "Loading..."
@@ -134,12 +232,14 @@ const replaceFromSuggestedText = (selected1, text, isLoading, event, data) => {
                     // range.insertNode(document.createTextNode(`${ele}`));
                     replaceText(selected1, text, ele)
 
-                    pContainer.remove()
-                    mainEle.remove()
+                    // pContainer.remove()
+                    // mainEle.remove()
+
                     // event.target.value = `${ele}`
                     // pContainer.remove()
                 }
             }
+
 
             divEleChild.onmouseover = () => {
                 divEleChild.style.background = "#ededed"
@@ -153,8 +253,11 @@ const replaceFromSuggestedText = (selected1, text, isLoading, event, data) => {
         // pContainer.innerHTML = divEleChild
 
     }
-    let dwElement = document.querySelector(".dw");
-    pararentEle.appendChild(h2)
+    let dcd = getSentanceButton(selected1, text, isLoading, event, data, sentances, counter)
+    let buttonContainer = dcd
+    // buttonContainer.innerHTML = dcd
+    console.log(dcd, 'dcd');
+    pararentEle.appendChild(buttonContainer)
     pararentEle.appendChild(pContainer)
     mainEle.appendChild(pararentEle)
     // dwElement.appendChild(mainEle)
@@ -166,51 +269,32 @@ const replaceFromSuggestedText = (selected1, text, isLoading, event, data) => {
 
 }
 
-const getOrignalText = (text) => {
-    let selText1 = `${selectedArr.text.substring(0, selectedArr.text.indexOf("."))}.`
-    let selText2 = `${selectedArr.text.substring(0, selectedArr.text.indexOf("?"))}?`
-    console.log("selText1: ", selText1, "selText2: ", selText2, "text: ", text, "selText1.length", selText1.length, "selText2.length", selText2.length)
-    if (selText1.length > selText2.length) {
-        if (selText2 !== '?') {
-            return selText2
-        }
-        else {
-            return selText1
-        }
-    }
-    else if (selText1 === '.' && selText2 === '?') {
-        return text
-    }
-    else {
-        if (selText1 !== '.') {
-            return selText1
-        }
-        else {
-            return selText2
-        }
-    }
+const getTextArray = (text) => {
+    let sentances = text.match(/[^\.!\?]+[\.!\?]+/g);
+    console.log('sentances', sentances)
+    return sentances
 }
 
-const iconModel = async (F1selected, text, event, data) => {
+const iconModel = async (F1selected, sentances, event, selSentance, counter) => {
     let isLoading = false
-    let selText = getOrignalText(text)
-    console.log("Hello, newton", "selText", selText)
-    replaceFromSuggestedText(F1selected, selText, isLoading, event, data)
+    console.log("Hello, newton", "selSentance", selSentance)
+    replaceFromSuggestedText(F1selected, selSentance, isLoading, event, [], sentances, counter)
 
-    let api_url = "https://b394-1-23-236-238.ngrok.io/paraphraser/"
+    let api_url = "https://1447-123-136-205-126.ngrok.io/paraphraser/"
+    console.log("Api url", api_url)
     let res = await fetch(api_url, {
         method: "POST",
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ text: selText })
+        body: JSON.stringify({ text: selSentance })
     })
     let orRes = await res.json()
     data = orRes['paraphrases']
 
     console.log("data", orRes, data)
     isLoading = true
-    replaceFromSuggestedText(F1selected, selText, isLoading, event, data)
+    replaceFromSuggestedText(F1selected, selSentance, isLoading, event, data, sentances, counter)
 }
 
 let data = ["It Will Fetched Text 1", "It Will Fetched Text 2", "It Will Fetched Text 3", "It Will Fetched Text 4", "It Will Fetched Text 5"]
@@ -236,8 +320,9 @@ const handleCLick = async (event) => {
             // selectedArr.push(F1selected.anchorNode.parentElement)
             // console.log('hello', selectedArr, F1selected.anchorNode.parentElement)
 
-            const buttonIcon = document.createElement('button')
+            let sentances = getTextArray(text)
 
+            const buttonIcon = document.createElement('button')
             buttonIcon.textContent = "P"
             buttonIcon.style.background = "#3b3c3a";
             buttonIcon.id = "iconId"
@@ -254,7 +339,7 @@ const handleCLick = async (event) => {
             buttonIcon.style.width = "35px";
             buttonIcon.style.height = "35px";
             buttonIcon.onclick = () => {
-                iconModel(nodeText, text, event, data)
+                iconModel(nodeText, sentances, event, sentances[0], 1)
                 buttonIcon.remove()
             }
 
@@ -269,10 +354,16 @@ const handleCLick = async (event) => {
 document.addEventListener('mouseup', handleCLick);
 
 const handleMouseDown = (event) => {
-    // console.log("2", event.target.id, event)
     let eleButton = document.getElementById('iconId')
     let eleContainer = document.getElementById('maincontainer');
-    if (event.target.id !== "pcontainer" && eleContainer !== null && event.target.className !== "pcontainer") {
+    let sentencreNavigator = document.getElementById('sentence-navigator')
+    console.log("2", `id: ${event.target.id} class: ${event.target.className}`,)
+    if (event.target.id !== "pcontainer" && eleContainer !== null && event.target.className !== "pcontainer" && event.target.className !== "navigator-button") {
+        let cols = document.getElementsByClassName('selectedTextBG');
+        for (i = 0; i < cols.length; i++) {
+            console.log("cols, cols[i]", cols, cols[i])
+            cols[i].style.backgroundColor = 'white';
+        }
         eleContainer.remove()
     }
     if (event.target.id !== "iconId" && eleButton !== null) {
