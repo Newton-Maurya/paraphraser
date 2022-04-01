@@ -1,0 +1,13 @@
+.selectedTextBG {
+  background-color: #48d5f8;
+}
+
+.sentence-navigator {
+  display: flex;
+  align-items: center;
+  width: 160px;
+}
+
+.btnSentenceText {
+  color: rgba(139, 10, 190, 0.5);
+}
